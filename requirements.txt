@@ -1,0 +1,4 @@
+PyQt5==5.15.x
+PyQt5-Qt5==5.15.x
+PyQt5-sip==12.x.x
+pyinstaller==x.x.x
