@@ -1,98 +1,58 @@
-import sqlite3
 import sys
-from PyQt5.QtWidgets import QLineEdit, QLabel, QVBoxLayout, QFormLayout, QHBoxLayout
-from PyQt5.QtWidgets import QWidget, QApplication, QPushButton, QComboBox
+from PyQt5.QtWidgets import (
+    QApplication, QMainWindow, QWidget, 
+    QVBoxLayout, QHBoxLayout, QPushButton, QStatusBar
+)
 
-
-class MyWidget(QWidget):
+class ArchiveWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.connection = sqlite3.connect('films_db.sqlite')
-        self.cursor = self.connection.cursor()
+        self.setWindowTitle("Архив судебных дел")
+        self.resize(800, 500)
+        layout = QVBoxLayout(self)
+        # Сюда мы чуть позже добавим QTableWidget и фильтр по датам!
         
-        self.parameterSelection = QComboBox()
-        self.parameterSelection.addItems(['Год выпуска', 'Название', 'Продолжительность'])
-        
-        self.queryLine = QLineEdit()
-        self.queryButton = QPushButton("Найти")
-        self.queryButton.clicked.connect(self.select_data)
-        self.errorLabel = QLabel("")
-        
-        self.idEdit = QLineEdit()
-        self.idEdit.setReadOnly(True)
-        
-        self.titleEdit = QLineEdit()
-        self.titleEdit.setReadOnly(True)
-        
-        self.yearEdit = QLineEdit()
-        self.yearEdit.setReadOnly(True)
-        
-        self.genreEdit = QLineEdit()
-        self.genreEdit.setReadOnly(True)
-        
-        self.durationEdit = QLineEdit()
-        self.durationEdit.setReadOnly(True)
+class LegalCaseApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("LegalMap — Интерактивная карта судебного дела")
+        self.resize(1200, 800)
 
-        main_layout = QHBoxLayout()
-        main_layout.addWidget(self.parameterSelection)
-        main_layout.addWidget(self.queryLine)
-        main_layout.addWidget(self.queryButton)
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+        self.status_bar.showMessage("Система LegalMap готова к работе")
 
-        form_layout = QFormLayout()
-        form_layout.addRow("ID:", self.idEdit)
-        form_layout.addRow("Название:", self.titleEdit)
-        form_layout.addRow("Год выпуска:", self.yearEdit)
-        form_layout.addRow("Жанр:", self.genreEdit)
-        form_layout.addRow("Продолжительность:", self.durationEdit)
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        self.main_layout = QHBoxLayout(self.central_widget)
 
-        ver_layout = QVBoxLayout()
-        ver_layout.addLayout(main_layout)
-        ver_layout.addLayout(form_layout)
-        ver_layout.addWidget(self.errorLabel)
-        
-        self.setLayout(ver_layout)
+        self.left_panel = QWidget()
+        self.left_layout = QVBoxLayout(self.left_panel)
+        self.main_layout.addWidget(self.left_panel, stretch=1)
 
-    def select_data(self):
-        self.errorLabel.setText("")
-        self.idEdit.setText("")
-        self.titleEdit.setText("")
-        self.yearEdit.setText("")
-        self.genreEdit.setText("")
-        self.durationEdit.setText("")
+        self.board_panel = QWidget()
+        self.board_panel.setStyleSheet("background-color: #2c3e50; border-radius: 8px;")
+        self.main_layout.addWidget(self.board_panel, stretch=2)
 
-        parametr = self.parameterSelection.currentText()
+        self.btn_open_archive = QPushButton("📁 Открыть архив дел")
+        self.btn_open_archive.setStyleSheet("font-weight: bold; padding: 10px; background-color: #34495e; color: white;")
+        self.btn_open_archive.clicked.connect(self.open_archive)
+        self.left_layout.addWidget(self.btn_open_archive)
 
-        try:
-            search = self.queryLine.text()
+        self.left_layout.addStretch()
 
-            if not search.strip():
-                self.errorLabel("Неправильный запрос")
-                return
-            if parametr == "Год выпуска":
-                query = "SELECT id, title, year, genre, duration FROM films WHERE year = ?"
-                result = self.cursor.execute(query, (search,)).fetchone()
-            elif parametr == "Название":
-                query = "SELECT id, title, year, genre, duration FROM films WHERE title = ?"
-                result = self.cursor.execute(query, (search,)).fetchone()
-            elif parametr == "Продолжительность":
-                query = "SELECT id, title, year, genre, duration FROM films WHERE duration = ?"
-                result = self.cursor.execute(query, (search,)).fetchone()
+        self.archive_window = None
+
+    def open_archive(self):
+        self.status_bar.showMessage("Открытие архива судебных дел...")
+        if self.archive_window is None:
+            self.archive_window = ArchiveWindow()
             
-            if result:
-                self.idEdit.setText(str(result[0]))
-                self.titleEdit.setText(result[1])
-                self.yearEdit.setText(str(result[2]))
-                self.genreEdit.setText(str(result[3]))
-                self.durationEdit.setText(str(result[4]))
-            else:
-                self.errorLabel.setText("Ничего не найдено")
-        
-        except Exception:
-            self.errorLabel.setText("Неправильный запрос")
-
+        self.archive_window.show()
+        self.status_bar.showMessage("Архив открыт в отдельном окне.")
 
 if __name__ == "__main__":
-    app = QApplication()
-    ex = MyWidget()
-    ex.show()
+    app = QApplication(sys.argv)
+    window = LegalCaseApp()
+    window.show()
     sys.exit(app.exec_())
