@@ -1,7 +1,8 @@
 import sys
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QWidget, 
-    QVBoxLayout, QHBoxLayout, QPushButton, QStatusBar
+    QApplication, QHeaderView, QMainWindow, QWidget, 
+    QVBoxLayout, QHBoxLayout, QPushButton, QStatusBar, QTableWidget, 
+    QTableWidgetItem, QLabel, QCalendarWidget
 )
 
 class ArchiveWindow(QWidget):
@@ -10,8 +11,61 @@ class ArchiveWindow(QWidget):
         self.setWindowTitle("Архив судебных дел")
         self.resize(800, 500)
         layout = QVBoxLayout(self)
-        # Сюда мы чуть позже добавим QTableWidget и фильтр по датам!
+        self.layout = QVBoxLayout(self)
         
+        self.label_filter = QLabel("📅 Выберите дату для фильтрации архивных дел:")
+        self.label_filter.setStyleSheet("font-weight: bold; margin-top: 5px;")
+        self.layout.addWidget(self.label_filter)
+        
+        self.archive_calendar = QCalendarWidget()
+        self.archive_calendar.setGridVisible(True)
+        self.archive_calendar.clicked.connect(self.filter_by_date)
+        self.layout.addWidget(self.archive_calendar)
+        
+        self.label_table = QLabel("📋 Список зарегистрированных дел в базе данных:")
+        self.label_table.setStyleSheet("font-weight: bold; margin-top: 10px;")
+        self.layout.addWidget(self.label_table)
+        
+        self.table = QTableWidget()
+        self.table.setColumnCount(4)
+        self.table.setHorizontalHeaderLabels(["ID", "Номер дела", "Категория", "Статус"])
+        self.table.horizontalHeader().setStretchLastSection(True)
+        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch) 
+        
+        self.table.cellClicked.connect(self.on_cell_clicked)
+        self.layout.addWidget(self.table)
+        
+        self.btn_select = QPushButton("⚡ Загрузить выбранное дело на интерактивную доску")
+        self.btn_select.setStyleSheet("font-weight: bold; padding: 8px; background-color: #27ae60; color: white;")
+        self.layout.addWidget(self.btn_select)
+
+        self.populate_test_data()
+
+    def populate_test_data(self):
+        # данные для теста
+        test_cases = [
+        ("1", "Дело № А40-1234/2026", "Гражданское", "В производстве"),
+        ("2", "Дело № УГ-987/2026", "Уголовное", "В производстве"),
+        ("3", "Дело № А56-7788/2025", "Арбитраж", "В архиве")
+        ]
+        
+        self.table.setRowCount(len(test_cases))
+        
+        for row_idx, case in enumerate(test_cases):
+            for col_idx, text in enumerate(case):
+                item = QTableWidgetItem(text)
+                self.table.setItem(row_idx, col_idx, item)
+
+    def filter_by_date(self):
+        selected_date = self.archive_calendar.selectedDate().toString("dd.MM.yyyy")
+        print(f"Фильтрация архива по дате: {selected_date}")
+        # тут sql запрос
+
+    def on_cell_clicked(self, row, column):
+        case_number = self.table.item(row, 1).text()
+        print(f"Выбрана строка: {row}, Дело: {case_number}")
+
+
 class LegalCaseApp(QMainWindow):
     def __init__(self):
         super().__init__()
