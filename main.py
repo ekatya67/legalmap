@@ -4,13 +4,15 @@ from PyQt5.QtWidgets import (
     QVBoxLayout, QHBoxLayout, QPushButton, QStatusBar, QTableWidget, 
     QTableWidgetItem, QLabel, QCalendarWidget, QRadioButton, QGroupBox
 )
+from database import cases_date
+from painting import Board
+
 
 class ArchiveWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Архив судебных дел")
         self.resize(800, 500)
-        layout = QVBoxLayout(self)
         self.layout = QVBoxLayout(self)
         
         self.label_filter = QLabel("📅 Выберите дату для фильтрации архивных дел:")
@@ -41,29 +43,26 @@ class ArchiveWindow(QWidget):
 
         self.populate_test_data()
 
-    def populate_test_data(self):
-        # данные для теста
-        test_cases = [
-        ("1", "Дело № А40-1234/2026", "Гражданское", "В производстве"),
-        ("2", "Дело № УГ-987/2026", "Уголовное", "В производстве"),
-        ("3", "Дело № А56-7788/2025", "Арбитраж", "В архиве")
-        ]
-        
-        self.table.setRowCount(len(test_cases))
-        
-        for row_idx, case in enumerate(test_cases):
-            for col_idx, text in enumerate(case):
-                item = QTableWidgetItem(text)
-                self.table.setItem(row_idx, col_idx, item)
-
-    def filter_by_date(self):
-        selected_date = self.archive_calendar.selectedDate().toString("dd.MM.yyyy")
-        print(f"Фильтрация архива по дате: {selected_date}")
-        # тут sql запрос
+    def filter_date(self):
+            date = self.archive_calender.selectedDate().toString("yyyy-MM-dd")
+            print(f"Фильтрация по дате:{date}")
+    
+            f_case = cases_date(cases_date)
+    
+            self.table.RowCount()
+            self.table.RowCount(len(f_case))
+            for row_i, case in enumerate(f_case):
+                self.table.setItem(row_i, 0, QTableWidgetItem(str(case[0])))
+                self.table.setItem(row_i, 1, QTableWidgetItem(str(case[1])))
+                self.table.setItem(row_i, 2, QTableWidgetItem(str(case[4])))
+                self.table.setItem(row_i, 3, QTableWidgetItem(str(case[5])))
+    
+            self.table.resizeColumnToContenst()
 
     def on_cell_clicked(self, row, column):
-        case_number = self.table.item(row, 1).text()
-        print(f"Выбрана строка: {row}, Дело: {case_number}")
+        if self.table.item(row, 1):
+            case_number = self.table.item(row, 1).text()
+            print(f"Выбрана строка: {row}, Дело: {case_number}")
 
 
 class LegalCaseApp(QMainWindow):
@@ -84,8 +83,7 @@ class LegalCaseApp(QMainWindow):
         self.left_layout = QVBoxLayout(self.left_panel)
         self.main_layout.addWidget(self.left_panel, stretch=1)
 
-        self.board_panel = QWidget()
-        self.board_panel.setStyleSheet("background-color: #2c3e50; border-radius: 8px;")
+        self.board_panel = Board()
         self.main_layout.addWidget(self.board_panel, stretch=2)
 
         self.btn_open_archive = QPushButton("📁 Открыть архив дел")
@@ -96,11 +94,6 @@ class LegalCaseApp(QMainWindow):
         self.left_layout.addStretch()
 
         self.archive_window = None
-
-        self.btn_open_archive = QPushButton("📁 Открыть архив дел")
-        self.btn_open_archive.setStyleSheet("font-weight: bold; padding: 10px; background-color: #34495e; color: white;")
-        self.btn_open_archive.clicked.connect(self.open_archive)
-        self.left_layout.addWidget(self.btn_open_archive)
 
         self.form_layout = QGridLayout()
         self.left_layout.addLayout(self.form_layout)
